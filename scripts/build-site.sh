@@ -10,7 +10,9 @@ out="${1:-$root/_site}"
 rm -rf "$out"
 mkdir -p "$out"
 
-for item in index.html assets robots.txt sitemap.xml .nojekyll CNAME; do
+# No CNAME: the custom domain lives on the Azure Static Web App, and a CNAME
+# file here would make GitHub Pages try to claim the same name.
+for item in index.html assets robots.txt sitemap.xml .nojekyll; do
   [[ -e "$root/$item" ]] && cp -R "$root/$item" "$out/"
 done
 

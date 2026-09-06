@@ -1,0 +1,86 @@
+name: deploy (azure)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# No repository-wide write. The deploy job adds `id-token: write` for OIDC.
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-swa
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify before publishing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/requirements.txt
+
+      - run: pip install -r tests/requirements.txt
+      - run: pytest -q
+
+  deploy:
+    name: Publish to Static Web Apps
+    needs: verify
+    runs-on: ubuntu-latest
+
+    # The federated credential trusts only this environment, so a workflow on
+    # another branch cannot assume the deployment identity.
+    environment:
+      name: production
+      url: https://shd.princeton.edu/
+
+    permissions:
+      id-token: write   # required to request the OIDC token
+      contents: read
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install zsh
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+
+      - name: Assemble _site
+        shell: zsh {0}
+        run: ./scripts/build-site.sh
+
+      # Secretless: federated OIDC, no stored credential. The client, tenant and
+      # subscription ids are repository *variables* — none of them is sensitive.
+      - name: Sign in to Azure
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # The deploy action still requires a deployment token, so fetch it
+      # just-in-time under the federated identity rather than storing it. It
+      # lives only for the length of this job.
+      - name: Fetch deployment token
+        id: swa
+        run: |
+          token=$(az staticwebapp secrets list \
+            --name "${{ vars.AZURE_SWA_NAME }}" \
+            --resource-group "${{ vars.AZURE_SWA_RG }}" \
+            --query "properties.apiKey" -o tsv)
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.swa.outputs.token }}
+          action: upload
+          app_location: _site
+          skip_app_build: true
+          skip_api_build: true

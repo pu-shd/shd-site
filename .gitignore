@@ -9,3 +9,9 @@ __pycache__/
 .pytest_cache/
 .venv/
 _site/
+
+# Brand source artwork. Kept outside the repo — the .ai is ~1.2 MB and the
+# published site does not use it. Local copies live in ../shd-site-brand-backup/.
+pu-shd.ai
+pu-shd.svg
+*.ai

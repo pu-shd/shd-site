@@ -40,21 +40,31 @@ def test_sitemap_is_valid_and_lists_the_canonical_url(root):
     assert locations == ["https://shd.princeton.edu/"]
 
 
-def test_custom_domain_is_not_claimed_before_dns_exists(root):
-    """A CNAME file with no matching DNS record takes the site offline.
+def test_no_cname_file(root):
+    """shd.princeton.edu is served by the Azure Static Web App, not Pages.
 
-    Add it — or set the custom domain in the Pages settings — only once
-    shd.princeton.edu actually resolves to GitHub.
+    A CNAME file would make GitHub Pages claim the same hostname, which at best
+    is dead configuration and at worst fights the Azure custom domain. Pages is
+    only the preview environment now, on its pu-shd.github.io URL.
     """
-    cname = root / "CNAME"
-    if cname.exists():
-        assert cname.read_text(encoding="utf-8").strip() == "shd.princeton.edu"
+    assert not (root / "CNAME").exists(), (
+        "the custom domain belongs to the Static Web App; see infra/set-custom-domain.sh"
+    )
 
 
 def test_workflows_are_present(root):
     workflows = sorted(p.name for p in (root / ".github" / "workflows").glob("*.yml"))
-    assert "ci.yml" in workflows
-    assert "pages.yml" in workflows
+    for expected in ("ci.yml", "pages.yml", "azure-swa.yml"):
+        assert expected in workflows, f"missing workflow: {expected}"
+
+
+def test_infra_is_scripted_with_a_teardown(root):
+    """Deploy, teardown and domain attachment are all scripted, not manual."""
+    for script in ("config.sh", "deploy.sh", "teardown.sh", "set-custom-domain.sh"):
+        path = root / "infra" / script
+        assert path.is_file(), f"missing infra/{script}"
+    for script in ("deploy.sh", "teardown.sh", "set-custom-domain.sh"):
+        assert (root / "infra" / script).stat().st_mode & 0o111, f"infra/{script} not executable"
 
 
 def test_scripts_are_executable(root):
