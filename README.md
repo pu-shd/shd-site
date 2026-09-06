@@ -2,22 +2,25 @@
 
 ![SHD — at Sherrerd Hall](assets/img/shd-lockup.png)
 
-The landing page for **SHD** — shared ground for the groups based at Sherrerd
-Hall, Princeton University. It is a single static page whose job is to explain
-what SHD is and point at two places: the [`pu-shd`](https://github.com/pu-shd)
-GitHub organization and the
+The landing page for **SHD** — shared ground for groups at Sherrerd Hall,
+Princeton University. Sherrerd Hall bridges disciplines; SHD is digital
+scaffold. It is a single static page whose job is to explain what SHD is and
+point at two places: the [`pu-shd`](https://github.com/pu-shd) GitHub
+organization and the
 [Facilities record for the building](https://facilities.princeton.edu/projects/sherrerd-hall-2008).
 
 Published with GitHub Pages. Intended to live at **https://shd.princeton.edu**.
 
 ## Why this exists
 
-The groups based in Sherrerd Hall run conferences and seminars, publish sites,
-keep records, and build the tooling to do all of it. A good deal of that effort
-is the same effort, solved separately more than once, and the useful parts
-rarely travel far from whoever wrote them. SHD is where it gets pooled: shared
-systems, hosted in the open, maintained once and available to everyone at this
-address.
+Sherrerd Hall was built to connect academics from different fields and capture
+the potential of their interactions in the open. SHD captures the systems and
+operations that emerge cross-discipline.
+
+From classrooms to conferences, seminars to sites, SHD captures the tooling to
+do all of it. Shared systems, hosted in the open, are maintained once and
+available to everyone — somewhere colleagues, be they down the corridor or
+across cohorts, can find them again.
 
 SHD is *at* Sherrerd Hall. It supports the groups in the building; it does not
 speak for them.
