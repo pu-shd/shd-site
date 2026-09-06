@@ -64,20 +64,48 @@ client_id=$(az identity show -n "$SHD_IDENTITY" -g "$SHD_RG" --query clientId -o
 principal_id=$(az identity show -n "$SHD_IDENTITY" -g "$SHD_RG" --query principalId -o tsv)
 tenant_id=$(az account show --query tenantId -o tsv)
 
-# Federated credential, scoped to one repo and one GitHub environment so no
+# Federated credentials, scoped to one repo and one GitHub environment so no
 # other workflow — or branch — can assume this identity.
-subject="repo:${SHD_GH_ORG}/${SHD_GH_REPO}:environment:${SHD_GH_ENVIRONMENT}"
-if ! az identity federated-credential show \
-      --identity-name "$SHD_IDENTITY" -g "$SHD_RG" -n gh-actions-production >/dev/null 2>&1; then
-  az identity federated-credential create \
-    --identity-name "$SHD_IDENTITY" -g "$SHD_RG" -n gh-actions-production \
-    --issuer "https://token.actions.githubusercontent.com" \
-    --subject "$subject" \
-    --audiences "api://AzureADTokenExchange" >/dev/null
-  print "Created federated credential for $subject"
+#
+# GitHub Enterprise can issue an *immutable* subject that embeds the numeric org
+# and repository ids, e.g.
+#     repo:pu-shd@162154108/shd-site@1359074890:environment:production
+# rather than the documented repo:ORG/REPO form. Which one arrives depends on
+# the enterprise's OIDC sub-claim template, so ask GitHub for the prefix it
+# actually uses and register both. Each is scoped to the same repo+environment,
+# so registering both widens nothing.
+typeset -a subjects
+subjects=("repo:${SHD_GH_ORG}/${SHD_GH_REPO}:environment:${SHD_GH_ENVIRONMENT}")
+
+if command -v gh >/dev/null 2>&1; then
+  prefix=$(gh api "repos/${SHD_GH_ORG}/${SHD_GH_REPO}/actions/oidc/customization/sub" \
+             --jq '.sub_claim_prefix // empty' 2>/dev/null || true)
+  if [[ -n "$prefix" && "$prefix" != "${SHD_GH_ORG}/${SHD_GH_REPO}" ]]; then
+    subjects+=("${prefix}:environment:${SHD_GH_ENVIRONMENT}")
+  fi
 else
-  print "Federated credential exists for $subject"
+  print "  gh not found — registering only the documented subject form."
+  print "  If login fails with AADSTS700213, read the subject from the run log"
+  print "  and add it with: az identity federated-credential create ..."
 fi
+
+i=0
+for subject in "${subjects[@]}"; do
+  i=$((i + 1))
+  name="gh-actions-${SHD_GH_ENVIRONMENT}-${i}"
+  if ! az identity federated-credential show \
+        --identity-name "$SHD_IDENTITY" -g "$SHD_RG" -n "$name" >/dev/null 2>&1; then
+    az identity federated-credential create \
+      --identity-name "$SHD_IDENTITY" -g "$SHD_RG" -n "$name" \
+      --issuer "https://token.actions.githubusercontent.com" \
+      --subject "$subject" \
+      --audiences "api://AzureADTokenExchange" >/dev/null
+    print "Created federated credential $name"
+    print "  subject: $subject"
+  else
+    print "Federated credential $name exists"
+  fi
+done
 
 # Least privilege: Contributor on the Static Web App resource only — not the
 # resource group, not the subscription. This is what permits listing the
