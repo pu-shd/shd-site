@@ -367,3 +367,36 @@ section + section { border-top: 1px solid var(--rule); }
   padding-top: 1.5rem; font-size: .8125rem; color: rgba(233,237,236,.55);
 }
 .foot__base p { margin: 0; }
+
+/* ---- University subfooter -------------------------------------------------
+   Policy links Princeton requires on its sites, plus the reversed shield
+   lockup. Kept visually quieter than the site's own footer columns. */
+
+.subfoot {
+  display: grid; gap: 1.25rem 2rem;
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 1.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid rgba(233, 237, 236, .14);
+}
+@media (min-width: 52rem) {
+  .subfoot { grid-template-columns: minmax(0, 1fr) auto; }
+  .subfoot__shield { grid-row: 1 / 3; grid-column: 2; }
+}
+
+.subfoot__links {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: .375rem 1.25rem;
+  font-size: .8125rem;
+}
+.subfoot__links li + li { margin-top: 0; }
+.subfoot__links a { color: rgba(233, 237, 236, .82); }
+.subfoot__links a:hover { color: var(--wood-lit); }
+
+.subfoot__copy { margin: 0; font-size: .8125rem; color: rgba(233, 237, 236, .55); }
+
+.subfoot__shield { display: block; justify-self: start; }
+@media (min-width: 52rem) { .subfoot__shield { justify-self: end; } }
+.subfoot__shield img { width: 11rem; height: auto; }
+.subfoot__shield:hover img { opacity: .85; }

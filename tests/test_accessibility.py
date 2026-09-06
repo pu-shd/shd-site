@@ -46,7 +46,9 @@ def test_link_text_is_never_vague(soup):
 
 def test_every_link_has_an_accessible_name(soup):
     for anchor in soup.find_all("a"):
-        name = anchor.get_text(" ", strip=True) or anchor.get("aria-label") or ""
+        # An image-only link takes its name from the image's alt text.
+        alt = " ".join(img.get("alt", "") for img in anchor.find_all("img"))
+        name = anchor.get_text(" ", strip=True) or anchor.get("aria-label") or alt
         assert name.strip(), f"link with no accessible name: {anchor}"
 
 

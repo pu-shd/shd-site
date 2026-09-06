@@ -32,6 +32,8 @@ ALLOWED_HOSTS = {
     "alumni.princeton.edu",
     "fisherpartners.net",
     "www.princeton.edu",
+    "accessibility.princeton.edu",
+    "inclusive.princeton.edu",
     "shd.princeton.edu",
 }
 
@@ -105,3 +107,32 @@ def test_private_repositories_are_named_but_never_linked(soup):
     for item in private:
         assert not item.find("a"), f"private entry must not link out: {item.code.text}"
         assert item.find("code"), "a private entry still names the repository"
+
+
+# Princeton requires these on University sites; losing one is a compliance
+# problem, not a cosmetic one.
+REQUIRED_POLICY_LINKS = {
+    "https://www.princeton.edu/content/copyright-infringement",
+    "https://www.princeton.edu/privacy-notice",
+    "https://accessibility.princeton.edu/help",
+    "https://inclusive.princeton.edu/about/"
+    "our-commitment-equal-opportunity-and-non-discrimination",
+}
+
+
+def test_university_policy_links_are_present(soup):
+    subfooter = soup.select_one(".subfoot")
+    assert subfooter, "the University subfooter is missing"
+    hrefs = {a["href"] for a in subfooter.select("a[href]")}
+    assert REQUIRED_POLICY_LINKS <= hrefs, (
+        f"missing required policy links: {sorted(REQUIRED_POLICY_LINKS - hrefs)}"
+    )
+
+
+def test_university_attribution_is_present(soup):
+    subfooter = soup.select_one(".subfoot")
+    assert "The Trustees of Princeton University" in subfooter.get_text()
+    shield = subfooter.select_one(".subfoot__shield img")
+    assert shield and shield["alt"] == "Princeton University"
+    assert shield["src"].endswith("pu-logo-stacked-white.svg")
+    assert subfooter.select_one(".subfoot__shield")["href"] == "https://www.princeton.edu"
