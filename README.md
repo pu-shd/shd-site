@@ -3,13 +3,17 @@
 ![SHD — at Sherrerd Hall](assets/img/shd-lockup.png)
 
 The landing page for **SHD** — shared ground for groups at Sherrerd Hall,
-Princeton University. Sherrerd Hall bridges disciplines; SHD is digital
-scaffold. It is a single static page whose job is to explain what SHD is and
+Princeton University. Sherrerd Hall bridges disciplines; SHD scaffolds
+the work. It is a single static page whose job is to explain what SHD is and
 point at two places: the [`pu-shd`](https://github.com/pu-shd) GitHub
 organization and the
 [Facilities record for the building](https://facilities.princeton.edu/projects/sherrerd-hall-2008).
 
 Published with GitHub Pages. Intended to live at **https://shd.princeton.edu**.
+
+> **Currently in holding.** `/` serves a *Coming soon* placeholder. The full
+> landing page is staged at `preview.html` and is deliberately **not**
+> published — see [Swapping the page in](#swapping-the-page-in).
 
 ## Why this exists
 
@@ -19,8 +23,8 @@ operations that emerge cross-discipline.
 
 From classrooms to conferences, seminars to sites, SHD captures the tooling to
 do all of it. Shared systems, hosted in the open, are maintained once and
-available to everyone — somewhere colleagues, be they down the corridor or
-across cohorts, can find them again.
+available to everyone. SHD keeps those systems findable — by the colleague
+down the corridor, and by the cohort that comes next.
 
 SHD is *at* Sherrerd Hall. It supports the groups in the building; it does not
 speak for them.
@@ -28,7 +32,8 @@ speak for them.
 ## Layout
 
 ```
-index.html                  the page
+index.html                  the holding page, served at /
+preview.html                the full landing page, staged for the swap
 assets/css/site.css         one stylesheet, no build step
 assets/img/                 web derivatives, committed
 _source/                    full-resolution originals — untracked, ~130 MB
@@ -38,8 +43,24 @@ Dockerfile                  test and preview container
 .github/workflows/          checks on every push; deploy on main
 ```
 
-There is no site generator and no JavaScript. Editing the page means editing
-`index.html`.
+There is no site generator and no JavaScript. Both documents share the single
+stylesheet, so the holding page inherits the palette, the University signature
+and the policy subfooter and adds nothing else.
+
+### Swapping the page in
+
+`scripts/build-site.sh` copies only `index.html`, so `preview.html` never
+reaches the published site. To go live:
+
+```sh
+git mv index.html holding.html      # keep it, in case you want it back
+git mv preview.html index.html
+```
+
+Then delete the `<meta name="robots" content="noindex">` line from the new
+`index.html` — it exists only to keep "Coming soon" out of search results —
+and run `./scripts/test.sh` before pushing. The test suite checks both
+documents, so it will tell you if the swap left anything behind.
 
 ## Design
 

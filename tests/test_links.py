@@ -47,38 +47,38 @@ def external_links(soup):
     return seen
 
 
-def test_no_plain_http_links(soup):
-    insecure = [href for href in external_links(soup) if href.startswith("http://")]
+def test_no_plain_http_links(page):
+    insecure = [href for href in external_links(page.soup) if href.startswith("http://")]
     assert not insecure, f"link over plain HTTP: {insecure}"
 
 
-def test_external_hosts_are_expected(soup):
+def test_external_hosts_are_expected(page):
     from urllib.parse import urlsplit
 
     unexpected = {
         urlsplit(href).hostname
-        for href in external_links(soup)
+        for href in external_links(page.soup)
         if urlsplit(href).hostname not in ALLOWED_HOSTS
     }
     assert not unexpected, f"unreviewed outbound host: {sorted(unexpected)}"
 
 
-def test_both_destinations_are_linked(soup):
-    hrefs = set(external_links(soup))
+def test_both_destinations_are_linked(preview):
+    hrefs = set(external_links(preview.soup))
     assert REQUIRED_DESTINATIONS <= hrefs, (
         f"missing: {sorted(REQUIRED_DESTINATIONS - hrefs)}"
     )
 
 
-def test_highlighted_repositories_are_distinct(soup):
+def test_highlighted_repositories_are_distinct(preview):
     """Each highlighted repo appears once, and the organization is linked out."""
     repo_links = [
-        a["href"] for a in soup.select(".highlights li a")
+        a["href"] for a in preview.soup.select(".highlights li a")
         if a["href"].startswith("https://github.com/pu-shd/")
     ]
     assert repo_links, "expected the highlights to link repositories"
     assert len(repo_links) == len(set(repo_links)), "a repository is highlighted twice"
-    more = soup.select_one(".more a")
+    more = preview.soup.select_one(".more a")
     assert more and more["href"] == "https://github.com/pu-shd", (
         "the highlights are a sample; the organization must be linked for the rest"
     )
@@ -96,17 +96,17 @@ def _fetch_status(url: str) -> int:
 
 
 @pytest.mark.network
-def test_every_external_link_resolves(soup):
-    urls = sorted(external_links(soup))
+def test_every_external_link_resolves(page):
+    urls = sorted(external_links(page.soup))
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
         results = dict(zip(urls, pool.map(_fetch_status, urls)))
     broken = {url: status for url, status in results.items() if status >= 400}
     assert not broken, f"broken links: {broken}"
 
 
-def test_private_repositories_are_never_linked(soup):
+def test_private_repositories_are_never_linked(page):
     """A link to a private repo shows a stranger a 404, so we only ever name them."""
-    for item in soup.select(".is-private"):
+    for item in page.soup.select(".is-private"):
         assert not item.find("a"), f"private entry must not link out: {item.get_text(strip=True)}"
         assert item.find("code"), "a private entry still names the repository"
 
@@ -122,8 +122,8 @@ REQUIRED_POLICY_LINKS = {
 }
 
 
-def test_university_policy_links_are_present(soup):
-    subfooter = soup.select_one(".subfoot")
+def test_university_policy_links_are_present(page):
+    subfooter = page.soup.select_one(".subfoot")
     assert subfooter, "the University subfooter is missing"
     hrefs = {a["href"] for a in subfooter.select("a[href]")}
     assert REQUIRED_POLICY_LINKS <= hrefs, (
@@ -131,8 +131,8 @@ def test_university_policy_links_are_present(soup):
     )
 
 
-def test_university_attribution_is_present(soup):
-    subfooter = soup.select_one(".subfoot")
+def test_university_attribution_is_present(page):
+    subfooter = page.soup.select_one(".subfoot")
     assert "The Trustees of Princeton University" in subfooter.get_text()
     shield = subfooter.select_one(".subfoot__shield img")
     assert shield and shield["alt"] == "Princeton University"

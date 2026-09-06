@@ -32,16 +32,16 @@ def _local_refs(soup):
                 yield tag_name, attr, url
 
 
-def test_referenced_files_exist(soup, root):
+def test_referenced_files_exist(page, root):
     missing = [
-        url for _, _, url in _local_refs(soup)
+        url for _, _, url in _local_refs(page.soup)
         if not (root / urllib.parse.unquote(url)).is_file()
     ]
-    assert not missing, f"referenced but absent: {missing}"
+    assert not missing, f"{page.name} references but does not ship: {missing}"
 
 
-def test_local_paths_are_relative(soup):
-    absolute = [url for _, _, url in _local_refs(soup) if url.startswith("/")]
+def test_local_paths_are_relative(page):
+    absolute = [url for _, _, url in _local_refs(page.soup) if url.startswith("/")]
     assert not absolute, (
         f"root-relative paths break project-page hosting: {absolute}"
     )
@@ -56,20 +56,20 @@ def test_css_url_references_exist(stylesheet, root):
         assert (css_dir / url).resolve().is_file(), f"missing CSS asset: {url}"
 
 
-def test_stylesheet_is_linked_not_inlined(soup):
-    assert soup.find("link", rel="stylesheet", href=re.compile(r"site\.css$"))
-    assert not soup.find("style"), "keep styles in assets/css/site.css"
+def test_stylesheet_is_linked_not_inlined(page):
+    assert page.soup.find("link", rel="stylesheet", href=re.compile(r"site\.css$"))
+    assert not page.soup.find("style"), "keep styles in assets/css/site.css"
 
 
-def test_no_inline_style_attributes(soup):
-    offenders = [str(t)[:80] for t in soup.find_all(style=True)]
+def test_no_inline_style_attributes(page):
+    offenders = [str(t)[:80] for t in page.soup.find_all(style=True)]
     assert not offenders, f"inline styles belong in the stylesheet: {offenders}"
 
 
-def test_favicons_present(soup, root):
+def test_favicons_present(page, root):
     hrefs = {
         link["href"]
-        for link in soup.find_all("link", rel=True) if link.get("href")
+        for link in page.soup.find_all("link", rel=True) if link.get("href")
     }
     assert "assets/img/favicon.svg" in hrefs
     assert "assets/img/apple-touch-icon.png" in hrefs
@@ -78,8 +78,8 @@ def test_favicons_present(soup, root):
             assert (root / href).is_file()
 
 
-def test_open_graph_image_exists_locally(soup, root):
-    og_image = soup.find("meta", attrs={"property": "og:image"})["content"]
+def test_open_graph_image_exists_locally(preview, root):
+    og_image = preview.soup.find("meta", attrs={"property": "og:image"})["content"]
     assert og_image.endswith("assets/img/og-card.jpg")
     assert (root / "assets" / "img" / "og-card.jpg").is_file()
 

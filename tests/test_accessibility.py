@@ -6,13 +6,13 @@ import re
 VAGUE_LINK_TEXT = {"here", "click here", "read more", "more", "link", "this"}
 
 
-def test_content_images_have_alt_text(soup):
-    for img in soup.find_all("img"):
+def test_content_images_have_alt_text(page):
+    for img in page.soup.find_all("img"):
         assert img.has_attr("alt"), f"img without alt: {img.get('src')}"
 
 
-def test_decorative_images_are_hidden_and_content_images_are_described(soup):
-    for img in soup.find_all("img"):
+def test_decorative_images_are_hidden_and_content_images_are_described(page):
+    for img in page.soup.find_all("img"):
         alt = img["alt"]
         if img.get("class") and "hero__img" in img["class"]:
             assert alt == "", "the hero photograph is decorative; the panel carries the text"
@@ -21,44 +21,44 @@ def test_decorative_images_are_hidden_and_content_images_are_described(soup):
         assert not alt.lower().startswith(("image of", "picture of", "photo of"))
 
 
-def test_images_declare_intrinsic_size(soup):
-    for img in soup.find_all("img"):
+def test_images_declare_intrinsic_size(page):
+    for img in page.soup.find_all("img"):
         assert img.get("width") and img.get("height"), (
             f"{img.get('src')} needs width/height so the layout does not shift"
         )
 
 
-def test_offscreen_images_are_lazy_and_the_masthead_and_hero_are_not(soup):
+def test_offscreen_images_defer_and_the_signature_does_not(page):
     """Everything below the fold defers; the signature and the hero do not."""
-    for img in soup.find_all("img"):
+    for img in page.soup.find_all("img"):
         classes = img.get("class") or []
         if "hero__img" in classes:
             assert img.get("loading") != "lazy", "never lazy-load the LCP image"
             assert img.get("fetchpriority") == "high"
-        elif img.find_parent("header", class_="masthead"):
+        elif "lockup__shield" in classes:
             assert img.get("loading") != "lazy", (
-                "the University signature renders first; deferring it flashes an empty header"
+                "the University signature renders first; deferring it flashes an empty mark"
             )
         else:
-            assert img.get("loading") == "lazy"
+            assert img.get("loading") == "lazy", f"{img.get('src')} should defer"
 
 
-def test_link_text_is_never_vague(soup):
-    for anchor in soup.find_all("a"):
+def test_link_text_is_never_vague(page):
+    for anchor in page.soup.find_all("a"):
         text = " ".join(anchor.get_text(" ", strip=True).split()).lower()
         assert text.strip(".") not in VAGUE_LINK_TEXT, f"vague link text: {text!r}"
 
 
-def test_every_link_has_an_accessible_name(soup):
-    for anchor in soup.find_all("a"):
+def test_every_link_has_an_accessible_name(page):
+    for anchor in page.soup.find_all("a"):
         # An image-only link takes its name from the image's alt text.
         alt = " ".join(img.get("alt", "") for img in anchor.find_all("img"))
         name = anchor.get_text(" ", strip=True) or anchor.get("aria-label") or alt
         assert name.strip(), f"link with no accessible name: {anchor}"
 
 
-def test_svg_icons_are_hidden_from_assistive_tech(soup):
-    for svg in soup.find_all("svg"):
+def test_svg_icons_are_hidden_from_assistive_tech(page):
+    for svg in page.soup.find_all("svg"):
         assert svg.get("aria-hidden") == "true" or svg.find("title"), (
             "decorative SVGs need aria-hidden; meaningful ones need a <title>"
         )

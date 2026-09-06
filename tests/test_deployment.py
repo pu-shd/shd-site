@@ -1,7 +1,7 @@
 """Repository conventions that GitHub Pages depends on."""
 from __future__ import annotations
 
-import pathlib
+import re
 import xml.etree.ElementTree as ElementTree
 
 SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
@@ -9,6 +9,23 @@ SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 
 def test_index_html_is_at_the_repository_root(root):
     assert (root / "index.html").is_file(), "Pages serves / from index.html at the root"
+
+
+def test_the_full_page_is_staged_alongside_it(root):
+    """preview.html holds the landing page until it is swapped in at /."""
+    assert (root / "preview.html").is_file(), (
+        "the full page should stay in the repository while the holding page is served"
+    )
+
+
+def test_only_the_holding_page_is_published(root):
+    """The staged page must not ship, or it is public in all but name."""
+    build = (root / "scripts" / "build-site.sh").read_text(encoding="utf-8")
+    copied = re.search(r"for item in ([^\n]+); do", build).group(1).split()
+    assert "index.html" in copied
+    assert "preview.html" not in copied, (
+        "preview.html would be reachable on the published site"
+    )
 
 
 def test_robots_allows_indexing_and_names_the_sitemap(root):
@@ -49,3 +66,8 @@ def test_readme_documents_the_domain_switch(root):
     readme = (root / "README.md").read_text(encoding="utf-8")
     assert "shd.princeton.edu" in readme
     assert "CNAME" in readme
+
+
+def test_readme_documents_the_holding_page(root):
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert "preview.html" in readme, "the swap has to be written down somewhere"
