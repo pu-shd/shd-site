@@ -1,6 +1,7 @@
+# The workflows stay in the image: the suite asserts on repository conventions,
+# including that they are present.
 _source/
 .git/
-.github/
 .pytest_cache/
 __pycache__/
 .venv/
