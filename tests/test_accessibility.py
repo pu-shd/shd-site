@@ -28,12 +28,17 @@ def test_images_declare_intrinsic_size(soup):
         )
 
 
-def test_offscreen_images_are_lazy_and_the_hero_is_not(soup):
+def test_offscreen_images_are_lazy_and_the_masthead_and_hero_are_not(soup):
+    """Everything below the fold defers; the signature and the hero do not."""
     for img in soup.find_all("img"):
-        is_hero = img.get("class") and "hero__img" in img["class"]
-        if is_hero:
+        classes = img.get("class") or []
+        if "hero__img" in classes:
             assert img.get("loading") != "lazy", "never lazy-load the LCP image"
             assert img.get("fetchpriority") == "high"
+        elif img.find_parent("header", class_="masthead"):
+            assert img.get("loading") != "lazy", (
+                "the University signature renders first; deferring it flashes an empty header"
+            )
         else:
             assert img.get("loading") == "lazy"
 

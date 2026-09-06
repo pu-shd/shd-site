@@ -70,14 +70,18 @@ def test_both_destinations_are_linked(soup):
     )
 
 
-def test_every_referenced_pu_shd_repo_is_named_once(soup):
-    """Each repo appears as a single, unambiguous entry in the work index."""
+def test_highlighted_repositories_are_distinct(soup):
+    """Each highlighted repo appears once, and the organization is linked out."""
     repo_links = [
-        a["href"] for a in soup.select(".group li a")
+        a["href"] for a in soup.select(".highlights li a")
         if a["href"].startswith("https://github.com/pu-shd/")
     ]
-    assert repo_links, "expected the work index to link repositories"
-    assert len(repo_links) == len(set(repo_links)), "a repository is listed twice"
+    assert repo_links, "expected the highlights to link repositories"
+    assert len(repo_links) == len(set(repo_links)), "a repository is highlighted twice"
+    more = soup.select_one(".more a")
+    assert more and more["href"] == "https://github.com/pu-shd", (
+        "the highlights are a sample; the organization must be linked for the rest"
+    )
 
 
 def _fetch_status(url: str) -> int:
@@ -100,12 +104,10 @@ def test_every_external_link_resolves(soup):
     assert not broken, f"broken links: {broken}"
 
 
-def test_private_repositories_are_named_but_never_linked(soup):
-    """A link to a private repo shows a stranger a 404, so we only name them."""
-    private = soup.select(".group li.is-private")
-    assert private, "expected at least one repository marked private"
-    for item in private:
-        assert not item.find("a"), f"private entry must not link out: {item.code.text}"
+def test_private_repositories_are_never_linked(soup):
+    """A link to a private repo shows a stranger a 404, so we only ever name them."""
+    for item in soup.select(".is-private"):
+        assert not item.find("a"), f"private entry must not link out: {item.get_text(strip=True)}"
         assert item.find("code"), "a private entry still names the repository"
 
 

@@ -98,34 +98,55 @@ h3 { font-size: 1.0625rem; letter-spacing: -.005em; }
 /* ---- Masthead ------------------------------------------------------------- */
 
 .masthead {
-  border-bottom: 1px solid var(--rule);
-  background: var(--paper);
+  background: var(--granite);
+  color: var(--frost);
+  border-bottom: 1px solid rgba(233, 237, 236, .12);
 }
 .masthead .shell {
-  display: flex; align-items: center; gap: 1rem;
-  min-height: 4rem;
+  display: flex; align-items: center; gap: 1.25rem;
+  min-height: 5.5rem;
   flex-wrap: wrap;
 }
-.mark {
-  display: inline-flex; align-items: center; gap: .625rem;
+
+/* The University signature. Shield and dividing rule are the standard marks;
+   the unit name is set in the site's own type. */
+.lockup {
+  display: inline-flex; align-items: center; gap: 1rem;
   text-decoration: none; color: inherit;
 }
-.mark__code {
+.lockup__shield { width: auto; height: 2.625rem; flex: none; }
+.lockup__rule {
+  flex: none; width: 1px; align-self: stretch;
+  min-height: 2.625rem;
+  background: rgba(233, 237, 236, .32);
+}
+.lockup__type { display: flex; flex-direction: column; gap: .3rem; }
+.lockup__code {
   font-family: var(--mono); font-weight: 600;
-  font-size: .8125rem; letter-spacing: .12em;
-  padding: .3rem .5rem;
-  background: var(--granite); color: var(--frost);
+  font-size: 1.4375rem; letter-spacing: .1em; line-height: 1;
+  color: var(--frost);
 }
-.mark__name {
-  font-size: .8125rem; letter-spacing: .1em; text-transform: uppercase; color: var(--slate);
+.lockup__place {
+  font-size: .6875rem; letter-spacing: .17em; line-height: 1;
+  text-transform: uppercase;
+  color: rgba(233, 237, 236, .64);
+  transition: color .15s ease;
 }
+.lockup:hover .lockup__place { color: var(--wood-lit); }
+
 .masthead nav { margin-left: auto; display: flex; gap: 1.5rem; }
 .masthead nav a {
   font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--slate); text-decoration: none;
+  color: rgba(233, 237, 236, .72); text-decoration: none;
 }
-.masthead nav a:hover { color: var(--wood); }
-@media (max-width: 32rem) { .masthead nav { display: none; } }
+.masthead nav a:hover { color: var(--wood-lit); }
+@media (max-width: 32rem) {
+  .masthead nav { display: none; }
+  .masthead .shell { min-height: 4.75rem; }
+  .lockup__shield { height: 2.25rem; }
+  .lockup__rule { min-height: 2.25rem; }
+  .lockup__code { font-size: 1.25rem; }
+}
 
 /* ---- Hero: a fritted panel projecting from the curtain wall --------------- */
 
@@ -251,41 +272,32 @@ section + section { border-top: 1px solid var(--rule); }
 }
 .door:hover .door__url { color: var(--wood); }
 
-/* ---- Work index ----------------------------------------------------------- */
+/* ---- Highlights ----------------------------------------------------------- */
 
-.groups { display: grid; gap: 2.5rem 3rem; margin-top: 2.5rem; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 40rem) { .groups { grid-template-columns: 1fr 1fr; } }
+.highlights {
+  list-style: none; margin: 2.5rem 0 0; padding: 0;
+  border-top: 1px solid var(--rule);
+}
+.highlights li { border-bottom: 1px solid var(--rule); }
+.highlights a {
+  display: grid; gap: .25rem 1.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 1rem 0;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+@media (min-width: 40rem) {
+  .highlights a { grid-template-columns: 11rem minmax(0, 1fr); align-items: baseline; }
+}
+.highlights code {
+  font-family: var(--mono); font-size: .875rem; color: var(--granite);
+}
+.highlights span { font-size: .9375rem; color: var(--slate); max-width: 38rem; }
+.highlights a:hover code, .highlights a:hover span { color: var(--wood); }
 
-.group h3 { margin-bottom: .375rem; }
-.group > p { margin: 0 0 1rem; font-size: .9375rem; color: var(--slate); max-width: 26rem; }
-.group ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-.group li { border-bottom: 1px solid var(--rule); }
-.group li a {
-  display: flex; gap: .75rem; align-items: baseline;
-  padding: .5rem 0; text-decoration: none; font-size: .875rem;
-}
-/* Private repositories are named but not linked; a visitor would only get a 404. */
-.group li.is-private {
-  display: flex; gap: .75rem; align-items: baseline;
-  padding: .5rem 0; font-size: .875rem; color: var(--slate);
-}
-.group li.is-private::after {
-  content: "private";
-  margin-left: auto; padding-left: .75rem;
-  font-family: var(--mono); font-size: .625rem; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--glass);
-}
-.group li.is-private code {
-  font-family: var(--mono); font-size: .8125rem;
-  flex: none; min-width: 9.5rem;
-}
-
-.group li a code {
-  font-family: var(--mono); font-size: .8125rem; color: var(--granite);
-  flex: none; min-width: 9.5rem;
-}
-.group li a span { color: var(--slate); }
-.group li a:hover code, .group li a:hover span { color: var(--wood); }
+.more { margin: 1.75rem 0 0; font-size: .9375rem; }
+.more a { text-underline-offset: .25em; }
+.more a::after { content: " \2192"; }
 
 /* ---- Building facts ------------------------------------------------------- */
 

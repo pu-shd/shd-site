@@ -1,8 +1,10 @@
 # shd-site
 
-The landing page for **SHD** — the work that comes out of Sherrerd Hall at
-Princeton University. It is a single static page whose job is to explain what
-SHD is and point at two places: the [`pu-shd`](https://github.com/pu-shd)
+![SHD — at Sherrerd Hall](assets/img/shd-lockup.png)
+
+The landing page for **SHD** — shared ground for the groups based at Sherrerd
+Hall, Princeton University. It is a single static page whose job is to explain
+what SHD is and point at two places: the [`pu-shd`](https://github.com/pu-shd)
 GitHub organization and the
 [Facilities record for the building](https://facilities.princeton.edu/projects/sherrerd-hall-2008).
 
@@ -10,12 +12,15 @@ Published with GitHub Pages. Intended to live at **https://shd.princeton.edu**.
 
 ## Why this exists
 
-Departments are reorganized; centers are chartered and sunset. A good deal of
-what is made in Sherrerd Hall is genuinely cross-unit — the software that runs
-conferences and seminars, the tooling that publishes departmental sites, the
-records systems several groups depend on. None of it belongs to a single
-academic unit, and none of it should disappear when one is restructured. SHD
-anchors that work to the building instead.
+The groups based in Sherrerd Hall run conferences and seminars, publish sites,
+keep records, and build the tooling to do all of it. A good deal of that effort
+is the same effort, solved separately more than once, and the useful parts
+rarely travel far from whoever wrote them. SHD is where it gets pooled: shared
+systems, hosted in the open, maintained once and available to everyone at this
+address.
+
+SHD is *at* Sherrerd Hall. It supports the groups in the building; it does not
+speak for them.
 
 ## Layout
 
@@ -39,6 +44,15 @@ The palette and structure come from the building: a black granite base, a
 curtain wall of tinted and fritted glass on a mullion grid, one white panel
 projecting over the entrance, and cherry wood at the door. The hero is that
 projecting panel; the section rules are the mullions; the accent is the door.
+
+The masthead carries the standard University signature — shield, dividing
+rule, unit name — with the name set in the site's own typography, reversed out
+of the granite. The shield (`assets/img/pu-shield-white.svg`) and the stacked
+lockup in the subfooter (`assets/img/pu-logo-stacked-white.svg`) are the
+official reversed marks from the Princeton Site Builder theme, used unmodified.
+
+`assets/img/shd-lockup.png` is a rendering of the same signature for use where
+HTML is not available — the GitHub organization profile, slides, and so on.
 
 ## Working on it
 
