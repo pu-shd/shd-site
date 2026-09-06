@@ -1,0 +1,7 @@
+_source/
+.git/
+.github/
+.pytest_cache/
+__pycache__/
+.venv/
+.DS_Store

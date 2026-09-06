@@ -1,0 +1,19 @@
+services:
+  test:
+    build: .
+    image: shd-site:latest
+    command: ["test"]
+
+  test-network:
+    build: .
+    image: shd-site:latest
+    command: ["test", "-m", "network"]
+
+  serve:
+    build: .
+    image: shd-site:latest
+    command: ["serve"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/site:ro

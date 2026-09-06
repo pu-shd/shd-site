@@ -1,0 +1,107 @@
+"""Outbound links: shape by default, and reachability when asked for it.
+
+princeton.edu sits behind Cloudflare bot detection. The `x-wdsoit-bot-bypass`
+header gets an automated client through; the value is not checked, only the
+presence of the header.
+"""
+from __future__ import annotations
+
+import concurrent.futures
+import urllib.error
+import urllib.request
+
+import pytest
+
+BOT_BYPASS = {"x-wdsoit-bot-bypass": "true"}
+USER_AGENT = "shd-site-linkcheck/1.0 (+https://shd.princeton.edu/)"
+TIMEOUT = 25
+
+# The two destinations this page exists to point at.
+REQUIRED_DESTINATIONS = {
+    "https://github.com/pu-shd",
+    "https://facilities.princeton.edu/projects/sherrerd-hall-2008",
+}
+
+ALLOWED_HOSTS = {
+    "github.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    "orfe.princeton.edu",
+    "citp.princeton.edu",
+    "facilities.princeton.edu",
+    "alumni.princeton.edu",
+    "fisherpartners.net",
+    "www.princeton.edu",
+    "shd.princeton.edu",
+}
+
+
+def external_links(soup):
+    seen = {}
+    for anchor in soup.find_all("a", href=True):
+        href = anchor["href"]
+        if href.startswith(("http://", "https://")):
+            seen.setdefault(href, anchor)
+    return seen
+
+
+def test_no_plain_http_links(soup):
+    insecure = [href for href in external_links(soup) if href.startswith("http://")]
+    assert not insecure, f"link over plain HTTP: {insecure}"
+
+
+def test_external_hosts_are_expected(soup):
+    from urllib.parse import urlsplit
+
+    unexpected = {
+        urlsplit(href).hostname
+        for href in external_links(soup)
+        if urlsplit(href).hostname not in ALLOWED_HOSTS
+    }
+    assert not unexpected, f"unreviewed outbound host: {sorted(unexpected)}"
+
+
+def test_both_destinations_are_linked(soup):
+    hrefs = set(external_links(soup))
+    assert REQUIRED_DESTINATIONS <= hrefs, (
+        f"missing: {sorted(REQUIRED_DESTINATIONS - hrefs)}"
+    )
+
+
+def test_every_referenced_pu_shd_repo_is_named_once(soup):
+    """Each repo appears as a single, unambiguous entry in the work index."""
+    repo_links = [
+        a["href"] for a in soup.select(".group li a")
+        if a["href"].startswith("https://github.com/pu-shd/")
+    ]
+    assert repo_links, "expected the work index to link repositories"
+    assert len(repo_links) == len(set(repo_links)), "a repository is listed twice"
+
+
+def _fetch_status(url: str) -> int:
+    request = urllib.request.Request(
+        url, method="GET", headers={"User-Agent": USER_AGENT, **BOT_BYPASS}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
+            return response.status
+    except urllib.error.HTTPError as exc:
+        return exc.code
+
+
+@pytest.mark.network
+def test_every_external_link_resolves(soup):
+    urls = sorted(external_links(soup))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
+        results = dict(zip(urls, pool.map(_fetch_status, urls)))
+    broken = {url: status for url, status in results.items() if status >= 400}
+    assert not broken, f"broken links: {broken}"
+
+
+def test_private_repositories_are_named_but_never_linked(soup):
+    """A link to a private repo shows a stranger a 404, so we only name them."""
+    private = soup.select(".group li.is-private")
+    assert private, "expected at least one repository marked private"
+    for item in private:
+        assert not item.find("a"), f"private entry must not link out: {item.code.text}"
+        assert item.find("code"), "a private entry still names the repository"

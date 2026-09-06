@@ -1,0 +1,45 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, to catch outbound links that rot after the fact.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    name: Static checks (container)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the test image
+        run: docker build -t shd-site:ci .
+
+      - name: Run the offline suite
+        run: docker run --rm shd-site:ci test -q
+
+  links:
+    name: Outbound links
+    runs-on: ubuntu-latest
+    # Link rot is worth knowing about but should not block a deployment.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/requirements.txt
+
+      - run: pip install -r tests/requirements.txt
+
+      - name: Resolve every external link
+        run: pytest -m network -q

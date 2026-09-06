@@ -1,0 +1,11 @@
+# Full-resolution originals. The committed derivatives in assets/img/ are built
+# from these by scripts/build-images.sh; the originals themselves are ~130 MB
+# and stay out of the repository.
+_source/
+
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+_site/

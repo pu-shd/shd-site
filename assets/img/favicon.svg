@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SHD">
+  <title>SHD — Sherrerd Hall</title>
+  <rect width="64" height="64" fill="#12171a"/>
+  <!-- curtain wall: mullion grid -->
+  <g stroke="#4d6b71" stroke-width="1.6" opacity=".85">
+    <path d="M4 18h56M4 32h56M4 46h56M18 4v56M32 4v56M46 4v56"/>
+  </g>
+  <!-- the projecting fritted panel -->
+  <rect x="12" y="12" width="30" height="30" fill="#e9edec" opacity=".92"/>
+  <!-- the cherry entry door -->
+  <rect x="30" y="42" width="8" height="14" fill="#b35a22"/>
+</svg>
